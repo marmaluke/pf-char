@@ -1,29 +1,43 @@
 var model = {
-    level: m.prop(1),
-    name: m.prop("Character Name"),
-    alignments: [ "Lawful Good", "Neutral Good", "Chaotic Good", "Lawful Neutral", "Neutral", "Chaotic Neutral", "Lawful Evil", "Neutral Evil", "Chaotic Evil" ],
-    alignment: m.prop("Alignment"),
-    className: m.prop("Class"),
-    charClass: function(){
-        return model.classes.filter(function(c){
-            return c.name() == model.className();
-        })[0];
+    character: {
+        level: function(){return model.currentChar() ? model.currentChar().level : 1;},
+        name: function(){return model.currentChar() ? model.currentChar().name : "Character Name";},
+        alignment: function(){return model.currentChar() ? model.currentChar().alignment : "Alignment";},
+        className: function(){return model.currentChar() ? model.currentChar().class.name : "Class";}
+    },
+    currentChar: m.prop(),
+    characters: {
+        artuk: {
+            name: "Artuk",
+            alignment: "Chaotic Evil",
+            stats: { str: 19, dex: 12, con: 14, int: 6, wis: 8, cha: 14 },
+            level: 5,
+            class: {
+                name: "Skald",
+                hd: 8,
+                bab: "med",
+                saves: { fort: "good", ref: "poor", will: "good" }
+            }
+        }
     }
 };
+
 model.Stat = function(name, label){
     this.name = m.prop(name);
     this.label = m.prop(label);
-    this.value = m.prop(10);
+};
+model.Stat.prototype.value = function() {
+    return model.currentChar() ? model.currentChar().stats[this.name()] : 10;
 };
 model.Stat.prototype.bonus = function(){
     return Math.floor((this.value() - 10) / 2);
 };
 model.Stat.byName = function(name) {
-    return model.stats.filter(function(s){
+    return model.character.stats.filter(function(s){
         return s.name() == name;
     })[0];
 };
-model.stats = [
+model.character.stats = [
     new model.Stat("str", "Strength"),
     new model.Stat("dex", "Dexterity"),
     new model.Stat("con", "Constitution"),
@@ -36,40 +50,28 @@ model.SavingThrow = function(name, label, stat){
     this.name = m.prop(name);
     this.label = m.prop(label);
     this.stat = m.prop(stat);
-    this.progression = m.prop("slow");
+};
+model.SavingThrow.prototype.progression = function(){
+    return model.currentChar() ? model.currentChar().class.saves[this.name()] : "poor";
 };
 model.SavingThrow.prototype.bonus = function(){
-    var self = this,
-        level = model.level(),
-        charClass = model.charClass(),
-        type = charClass ? charClass[self.name()]() : undefined,
+    var level = model.character.level(),
         levelBonus;
 
-    if (type == "good") {
+    if (this.progression() == "good") {
         levelBonus = 2 + Math.floor(level / 2);
     } else {
         levelBonus = Math.floor(level / 3);
     }
 
-    return levelBonus + model.stats.filter(function(s){return s.name() == self.stat();})[0].bonus();
+    return levelBonus + model.Stat.byName(this.stat()).bonus();
 };
-model.savingThrows = [
+model.character.savingThrows = [
     new model.SavingThrow("fort", "Fortitude", "con"),
     new model.SavingThrow("ref", "Reflex", "dex"),
     new model.SavingThrow("will", "Will", "wis")
 ];
 
-model.CharClass = function(name, bab, fort, ref, will){
-    this.name = m.prop(name);
-    this.bab = m.prop(bab);
-    this.fort = m.prop(fort);
-    this.ref = m.prop(ref);
-    this.will = m.prop(will);
-};
-model.classes = [
-    new model.CharClass("Skald", "med", "good", "poor", "good"),
-    new model.CharClass("Battlerager", "good", "good", "poor", "poor")
-];
 
 var viewmodel = {
     showBonus: function(bonus){
@@ -82,12 +84,12 @@ var viewmodel = {
 
 var component = {};
 component.Layout = {
-    view: function(){
-        return [
+    view: function(ctrl, subComponent){
+        return m(".pure-g", [
             m(".pure-u-1-8"),
-            m(".pure-u-3-4", component.Sheet),
+            m(".pure-u-3-4", subComponent),
             m(".pure-u-1-8")
-        ];
+        ]);
     }
 };
 
@@ -142,36 +144,58 @@ component.Separator = {
 };
 
 component.Sheet = {
-    view: function() {
+    controller: function(){
+        var character = m.route.param("char");
+        model.currentChar(model.characters[character]);
+        return {};
+    },
+    view: function(ctrl) {
         return m(".pure-g", [
             component.Separator,
-            m(".pure-u-1-4", m.component(component.Editable, {value: model.name})),
-            m(".pure-u-1-4", m.component(component.ListEditable, {value: model.alignment, list: model.alignments})),
-            m(".pure-u-1-4", m.component(component.ListEditable, {value: model.className, list: model.classes.map(function(c){return c.name();})})),
-            m(".pure-u-1-4", m.component(component.Editable, {value: model.level})),
+            m(".pure-u-1-3", m("span", model.character.name())),
+            m(".pure-u-1-6", m("span", model.character.className())),
+            m(".pure-u-1-6", m("span", model.character.level())),
+            m(".pure-u-1-3", m("span", model.character.alignment())),
             component.Separator,
             m(".pure-u-1-3", [
                 m("pure-g",
-                  model.stats.map(function(s){
+                  model.character.stats.map(function(s){
                       return [
-                          m(".pure-u-1-3", m("label", {for: s.name()}, s.label())),
-                          m(".pure-u-1-3", m.component(component.Editable, {id: s.name(), value: s.value})),
+                          m(".pure-u-1-3", m("label", s.label())),
+                          m(".pure-u-1-3", m("span", s.value())),
                           m(".pure-u-1-3", m("span", viewmodel.showBonus(s.bonus())))
                       ];
                   }))
             ]),
             m(".pure-u-1-3", [
-                model.savingThrows.map(function(s){
+                model.character.savingThrows.map(function(s){
                     return [
-                        m(".pure-u-1-3", m("label", {for: s.name()}, s.label())),
+                        m(".pure-u-1-3", m("label", s.label())),
                         m(".pure-u-1-3", m("span", viewmodel.showBonus(s.bonus()))),
                         m(".pure-u-1-3")
                       ];
                 })
+            ]),
+            m(".pure-u-1-3", [
+
             ]),
             component.Separator
         ]);
     }
 };
 
-m.mount(document.getElementById("layout"), component.Layout);
+component.ChooseCharacter = {
+    view: function(){
+        return m(".pure.g", [
+            m("h2", "Choose a character"),
+            Object.getOwnPropertyNames(model.characters).map(function(cname){
+                return m("a", {href: "/" + cname, config: m.route}, model.characters[cname].name);
+            })
+        ]);
+    }
+};
+
+m.route(document.getElementById("layout"), "/", {
+    "/:char": m.component(component.Layout, component.Sheet),
+    "/": m.component(component.Layout, component.ChooseCharacter)
+});
