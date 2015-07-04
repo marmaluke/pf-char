@@ -3,7 +3,8 @@ var model = {
         level: function(){return model.currentChar() ? model.currentChar().level : 1;},
         name: function(){return model.currentChar() ? model.currentChar().name : "Character Name";},
         alignment: function(){return model.currentChar() ? model.currentChar().alignment : "Alignment";},
-        className: function(){return model.currentChar() ? model.currentChar().class.name : "Class";}
+        className: function(){return model.currentChar() ? model.currentChar().class.name : "Class";},
+        ac: m.prop(10)
     },
     currentChar: m.prop(),
     characters: {
@@ -157,27 +158,26 @@ component.Sheet = {
             m(".pure-u-1-6", m("span", model.character.level())),
             m(".pure-u-1-3", m("span", model.character.alignment())),
             component.Separator,
+            m(".pure-u-1-3",
+              model.character.stats.map(function(s){
+                  return [
+                      m(".pure-u-1-3", m("label", s.label())),
+                      m(".pure-u-1-3", m("span", s.value())),
+                      m(".pure-u-1-3", m("span", viewmodel.showBonus(s.bonus())))
+                  ];
+              })),
+            m(".pure-u-1-3",
+              model.character.savingThrows.map(function(s){
+                  return [
+                      m(".pure-u-1-3", m("label", s.label())),
+                      m(".pure-u-1-3", m("span", viewmodel.showBonus(s.bonus()))),
+                      m(".pure-u-1-3")
+                  ];
+              })),
             m(".pure-u-1-3", [
-                m("pure-g",
-                  model.character.stats.map(function(s){
-                      return [
-                          m(".pure-u-1-3", m("label", s.label())),
-                          m(".pure-u-1-3", m("span", s.value())),
-                          m(".pure-u-1-3", m("span", viewmodel.showBonus(s.bonus())))
-                      ];
-                  }))
-            ]),
-            m(".pure-u-1-3", [
-                model.character.savingThrows.map(function(s){
-                    return [
-                        m(".pure-u-1-3", m("label", s.label())),
-                        m(".pure-u-1-3", m("span", viewmodel.showBonus(s.bonus()))),
-                        m(".pure-u-1-3")
-                      ];
-                })
-            ]),
-            m(".pure-u-1-3", [
-
+                m(".pure-u-1-3", m("span", "Armor Class")),
+                m(".pure-u-1-3", m("span", model.character.ac())),
+                m(".pure-u-1-3")
             ]),
             component.Separator
         ]);
