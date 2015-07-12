@@ -22,7 +22,10 @@ model.Character = function(c){
     };
 
     this.mods = {
-        ac: m.prop(0)
+        ac: m.prop(0),
+        atk: m.prop(0),
+        dam: m.prop(0),
+        skill: m.prop(0)
     };
 };
 model.Character.prototype.bab = function(){
@@ -41,7 +44,10 @@ model.Character.prototype.cmd = function(){
     return 10 + this.bab() + this.stats.str.bonus() + this.stats.dex.bonus();
 };
 model.Character.prototype.ac = function(){
-    return 10 + this.stats.dex.bonus() + this.mods.ac();
+    return 10
+        + Math.min(this.stats.dex.bonus(), this.armor.maxDex)
+        + this.mods.ac()
+        + this.armor.ac;
 };
 model.Character.prototype.doDamage = function(amt) {
     var hp = this.hp;
@@ -84,6 +90,23 @@ model.WillSave = function(progression){
     return new model.SavingThrow(progression, "wis");
 };
 
+model.ActivatedEffect = function(ae){
+    this.name = m.prop(ae.name);
+    this.startFn = ae.start;
+    this.endFn = ae.end;
+    this.active = m.prop(false);
+};
+model.ActivatedEffect.prototype.start = function(){
+    if (this.active()) return;
+    this.active(true);
+    this.startFn(model.currentChar());
+};
+model.ActivatedEffect.prototype.end = function(){
+    if (!this.active()) return;
+    this.active(false);
+    this.endFn(model.currentChar());
+};
+
 model.characters = {
     artuk: new model.Character({
         name: "Artuk",
@@ -94,29 +117,91 @@ model.characters = {
             name: "Skald",
             hd: 8,
             babProgression: "med",
-            saves: { fort: new model.FortSave("good"), ref: new model.RefSave("poor"), will: new model.WillSave("good") }
+            saves: {
+                fort: new model.FortSave("good"),
+                ref: new model.RefSave("poor"),
+                will: new model.WillSave("good")
+            }
         },
-        activatedEffects: [
+        armor: {
+            name: "MW Breastplate",
+            ac: 6,
+            maxDex: 3,
+            acp: -3
+        },
+        attacks: [
             {
+                name: "Cutlass",
+                stat: "str",
+                atk: 0,
+                dam: 0,
+                twoHanded: false,
+                damage: "1d6",
+                type: "S",
+                crit: "18-20/x2"
+            },
+            {
+                name: "Cutlass (2H)",
+                stat: "str",
+                atk: 0,
+                dam: 0,
+                twoHanded: true,
+                damage: "1d6",
+                type: "S",
+                crit: "18-20/x2"
+            }
+        ],
+        activatedEffects: [
+            new model.ActivatedEffect({
                 name: "Raging Song",
-                active: m.prop(false),
                 start: function(c){
-                    if (this.active()) return;
-                    this.active(true);
                     c.stats.str.value(c.stats.str.value() + 2);
                     c.stats.con.value(c.stats.con.value() + 2);
                     c.class.saves.will.bonus(c.class.saves.will.bonus() + 2);
                     c.mods.ac(c.mods.ac() - 1);
                 },
                 end: function(c){
-                    if (!this.active()) return;
-                    this.active(false);
                     c.stats.str.value(c.stats.str.value() - 2);
                     c.stats.con.value(c.stats.con.value() - 2);
                     c.class.saves.will.bonus(c.class.saves.will.bonus() - 2);
                     c.mods.ac(c.mods.ac() + 1);
                 }
-            }
+            }),
+            new model.ActivatedEffect({
+              name: "Heroism",
+              start: function(c){
+                  c.mods.atk(c.mods.atk() + 2);
+                  c.mods.skill(c.mods.skill() + 2);
+              },
+              end: function(c){
+                  c.mods.atk(c.mods.atk() - 2);
+                  c.mods.skill(c.mods.skill() - 2);
+              }
+            }),
+            new model.ActivatedEffect({
+                name: "Arcane Strike",
+                start: function(c){
+                    c.mods.dam(c.mods.dam() + (1 + Math.floor(c.level / 5)));
+                },
+                end: function(c){
+                    c.mods.dam(c.mods.dam() - (1 + Math.floor(c.level / 5)));
+                }
+            }),
+            new model.ActivatedEffect({
+                name: "Power Attack",
+                start: function(c){
+                    c.mods.atk(c.mods.atk() - 1);
+                    c.attacks.forEach(function(w){
+                        w.dam = w.dam + (w.twoHanded ? 3 : 2);
+                    });
+                },
+                end: function(c){
+                    c.mods.atk(c.mods.atk() + 1);
+                    c.attacks.forEach(function(w){
+                        w.dam = w.dam - (w.twoHanded ? 3 : 2);
+                    });
+                }
+            })
         ]
     })
 };
@@ -129,7 +214,7 @@ var viewmodel = {
         className: function(){return model.currentChar() ? model.currentChar().class.name : "Class";},
         ac: function(){return model.currentChar() ? model.currentChar().ac() : "10";},
         bab: function(){return model.currentChar() ? model.currentChar().bab() : "0";},
-        cmb: function(){return model.currentChar() ? model.currentChar().cmb() : "0";},
+        cmb: function(){return "+" + (model.currentChar() ? model.currentChar().cmb() : "0");},
         cmd: function(){return model.currentChar() ? model.currentChar().cmd() : "10";},
         currentHP: function(){return model.currentChar() ? model.currentChar().hp.max() - model.currentChar().hp.damage() : "0";},
         maxHP: function(){return model.currentChar() ? model.currentChar().hp.max() : "0";},
@@ -140,6 +225,18 @@ var viewmodel = {
     },
     toOption: function(obj){
         return m("option", obj);
+    },
+    attack: function(weapon){
+        return "+" + (model.currentChar().bab()
+                      + weapon.atk
+                      + model.currentChar().mods.atk()
+                      + model.currentChar().stats[weapon.stat].bonus());
+    },
+    damage: function(weapon){
+        return weapon.damage + "+"
+            + (Math.floor(model.currentChar().stats[weapon.stat].bonus() * (weapon.twoHanded ? 1.5 : 1))
+               + weapon.dam
+               + model.currentChar().mods.dam());
     }
 };
 viewmodel.Stat = function(name, label){
@@ -282,12 +379,26 @@ component.Sheet = {
                 m(".pure-u-1-3")
             ]),
             component.Separator,
-            m(".pure-u-1", m("h3", "Attacks")),
+            model.currentChar().attacks.map(function(weapon){
+                return [
+                    m(".pure-u-1-5", weapon.name),
+                    m(".pure-u-1-5", viewmodel.attack(weapon)),
+                    m(".pure-u-1-5", viewmodel.damage(weapon)),
+                    m(".pure-u-1-5", weapon.type),
+                    m(".pure-u-1-5", weapon.crit)
+                ];
+            }),
             component.Separator,
             m(".pure-u-1-3", model.currentChar().activatedEffects.map(function(effect){
                 return [
-                    m(".pure-u-1-3", m("label", effect.name)),
-                    m(".pure-u-1-3", effect.active() ? m("button", {onclick: function(e){e.preventDefault();effect.end(model.currentChar());}}, "Off") : m("button", {onclick: function(e){e.preventDefault();effect.start(model.currentChar());}}, "On")),
+                    m(".pure-u-1-3", m("label", effect.name())),
+                    m(".pure-u-1-3", m("input[type=checkbox]", {onchange: function(e){
+                        if (e.target.checked) {
+                            effect.start();
+                        } else {
+                            effect.end();
+                        }
+                    }})),
                     m(".pure-u-1-3")
                 ];
             }))
