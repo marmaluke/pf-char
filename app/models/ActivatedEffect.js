@@ -1,5 +1,3 @@
-//var m = require('mithril');
-
 var ActivatedEffect = function(ae){
     this.name = m.prop(ae.name);
     this.active = m.prop(false);

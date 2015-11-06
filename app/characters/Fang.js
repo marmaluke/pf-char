@@ -1,8 +1,15 @@
 var Character = require('../models/Character'),
     Stat = require('../models/Stat'),
-    FortSave = require('../models/FortSave'),
-    RefSave = require('../models/RefSave'),
-    WillSave = require('../models/WillSave');
+    SavingThrow = require('../models/SavingThrow'),
+    FortSave = SavingThrow.FortSave,
+    RefSave = SavingThrow.RefSave,
+    WillSave = SavingThrow.WillSave,
+    Weapon = require('../models/Weapon'),
+    PassiveEffect = require('../models/PassiveEffect'),
+    ActivatedEffect = require('../models/ActivatedEffect'),
+    Skill = require('../models/Skill');
+
+//var model = require('../models/Model');
 
 var fang = module.exports = new Character({
     name: "Fang",
@@ -34,7 +41,7 @@ var fang = module.exports = new Character({
         acp: -3
     },
     attacks: [
-        new model.Weapon({
+        new Weapon({
             name: "Longspear",
             atkBonus: 0,
             damBonus: 0,
@@ -51,7 +58,7 @@ var fang = module.exports = new Character({
         }
     ],
     effects: [
-        new model.ActivatedEffect({
+        new ActivatedEffect({
             name: "Bloodrage",
             description: "+4 Str/Con, -2 AC, +2 Will",
             start: function(c){
@@ -67,11 +74,11 @@ var fang = module.exports = new Character({
                 c.mods().ac(c.mods().ac() + 2);
             }
         }),
-        new model.PassiveEffect("Rage Power: Lesser Beast Totem"),
-        new model.PassiveEffect("Uncanny Dodge"),
-        new model.PassiveEffect("Improved Uncanny Dodge"),
-        new model.PassiveEffect("Arcane Bloodrage", "Apply the effects of blur, protection from arrows, resist energy (choose one energy type), or spider climb while raging"),
-        new model.ActivatedEffect({
+        new PassiveEffect("Rage Power: Lesser Beast Totem"),
+        new PassiveEffect("Uncanny Dodge"),
+        new PassiveEffect("Improved Uncanny Dodge"),
+        new PassiveEffect("Arcane Bloodrage", "Apply the effects of blur, protection from arrows, resist energy (choose one energy type), or spider climb while raging"),
+        new ActivatedEffect({
             name: "Power Attack",
             description: "-2 atk, +4 dam (+6 for 2-H weapon)",
             start: function(c){
@@ -87,26 +94,26 @@ var fang = module.exports = new Character({
                 });
             }
         }),
-        new model.PassiveEffect("Fast Movement", "+10 ft movement"),
-        new model.PassiveEffect("Blood Sanctuary", "+2 save vs spells cast by allies"),
+        new PassiveEffect("Fast Movement", "+10 ft movement"),
+        new PassiveEffect("Blood Sanctuary", "+2 save vs spells cast by allies"),
     ],
     skills: [
-        new model.Skill({
+        new Skill({
             name: "Climb",
             stat: "str",
             ranks: 5
         }, true, true),
-        new model.Skill({
+        new Skill({
             name: "Intimidate",
             stat: "cha",
             ranks: 5
         }, true, true),
-        new model.Skill({
+        new Skill({
             name: "Profession (sailor)",
             stat: "wis",
             ranks: 5
         }, true, true),
-        new model.Skill({
+        new Skill({
             name: "Swim",
             stat: "str",
             ranks: 5

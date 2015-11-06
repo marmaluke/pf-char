@@ -19,4 +19,18 @@ SavingThrow.prototype.value = function(character){
     return levelBonus + character.stats[this.stat()].bonus() + this.bonus();
 };
 
-module.exports = SavingThrow;
+var FortSave = function(progression){
+    return new SavingThrow(progression, "con");
+};
+
+var RefSave = function(progression){
+    return new SavingThrow(progression, "dex");
+};
+
+var WillSave = function(progression){
+    return new SavingThrow(progression, "wis");
+};
+
+exports.FortSave = FortSave;
+exports.RefSave = RefSave;
+exports.WillSave = WillSave;
