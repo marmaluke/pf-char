@@ -1,158 +1,6 @@
-var model = {
-    currentChar: m.prop()
-};
+//var m = require('mithril');
 
-model.Stat = function(value){
-    this.value = m.prop(value);
-};
-model.Stat.prototype.bonus = function(){
-    return Math.floor((this.value() - 10) / 2);
-};
-
-model.Character = function(c){
-    var self = this;
-    Object.getOwnPropertyNames(c).forEach(function(pname){
-        self[pname] = c[pname];
-    });
-
-    this.hp = {
-        max: function(){return self.level * ((self.class.hd / 2) + 1 + self.stats.con.bonus() + 1) + ((self.class.hd / 2) - 1);},
-        damage: m.prop(0),
-        temp: m.prop(0)
-    };
-
-    this.isArmorEquipped = m.prop(true);
-
-    this.mods = m.prop({
-        ac: m.prop(0),
-        atk: m.prop(0),
-        dam: m.prop(0),
-        skill: m.prop(0)
-    });
-};
-model.Character.prototype.bab = function(){
-    var multiplier;
-    switch (this.class.babProgression) {
-    case "poor": multiplier = 0.5; break;
-    case "med": multiplier = 0.75; break;
-    default: multiplier = 1; break;
-    }
-    return Math.floor(this.level * multiplier);
-};
-model.Character.prototype.cmb = function(){
-    return this.bab()
-        + this.mods().atk()
-        + this.stats.str.bonus();
-};
-model.Character.prototype.cmd = function(){
-    return 10 + this.bab() + this.stats.str.bonus() + this.stats.dex.bonus();
-};
-model.Character.prototype.ac = function(){
-    return 10
-        + (this.isArmorEquipped() ? Math.min(this.stats.dex.bonus(), this.armor.maxDex) : this.stats.dex.bonus())
-        + this.mods().ac()
-        + (this.isArmorEquipped() ? this.armor.ac : 0);
-};
-model.Character.prototype.touchAc = function(){
-    return 10
-        + (this.isArmorEquipped() ? Math.min(this.stats.dex.bonus(), this.armor.maxDex) : this.stats.dex.bonus())
-        + this.mods().ac();
-};
-model.Character.prototype.doDamage = function(amt) {
-    var hp = this.hp;
-    if (hp.temp() > amt) {
-        hp.temp(hp.temp() - amt);
-    } else {
-        hp.damage(hp.damage() + amt - hp.temp());
-        hp.temp(0);
-    }
-};
-model.Character.prototype.doHeal = function(amt) {
-    var hp = this.hp;
-    hp.damage(Math.max(hp.damage() - amt, 0));
-};
-
-model.SavingThrow = function(progression, stat){
-    this.progression = m.prop(progression);
-    this.stat = m.prop(stat);
-    this.bonus = m.prop(0);
-};
-model.SavingThrow.prototype.value = function(){
-    var level = model.currentChar().level,
-        levelBonus;
-
-    if (this.progression() == "good") {
-        levelBonus = 2 + Math.floor(level / 2);
-    } else {
-        levelBonus = Math.floor(level / 3);
-    }
-
-    return levelBonus + model.currentChar().stats[this.stat()].bonus() + this.bonus();
-};
-model.FortSave = function(progression){
-    return new model.SavingThrow(progression, "con");
-};
-model.RefSave = function(progression){
-    return new model.SavingThrow(progression, "dex");
-};
-model.WillSave = function(progression){
-    return new model.SavingThrow(progression, "wis");
-};
-
-model.ActivatedEffect = function(ae){
-    this.name = m.prop(ae.name);
-    this.active = m.prop(false);
-    this.description = m.prop(ae.description);
-    this.start = function(){
-        if (this.active()) return;
-        this.active(true);
-        ae.start(model.currentChar());
-    };
-    this.end = function(){
-        if (!this.active()) return;
-        this.active(false);
-        ae.end(model.currentChar());
-    };
-};
-
-model.PassiveEffect = function(name, description){
-    this.name = typeof name === "function" ? description : m.prop(name);
-    this.description = typeof description === "function" ? description : m.prop(description);
-};
-
-model.Skill = function(sk, isClass, isPhysical){
-    this.name = m.prop(sk.name);
-    this.bonus = function(){
-        return model.currentChar().stats[sk.stat].bonus()
-            + sk.ranks
-            + (isClass && sk.ranks > 0 ? 3 : 0)
-            + (sk.bonus ? sk.bonus() : 0)
-            + (isPhysical && model.currentChar().isArmorEquipped() ? model.currentChar().armor.acp : 0)
-            + model.currentChar().mods().skill();
-    };
-    this.conditional = function(){
-        return sk.conditional ? sk.conditional() : "";
-    };
-};
-
-model.Weapon = function(args){
-    args.atkStat = args.atkStat ? args.atkStat : "str";
-    args.damStat = args.damStat ? args.damStat : "str";
-    this.name = function(){return args.name;};
-    this.atkStat = function(){return args.atkStat;};
-    this.damStat = function(){return args.damStat;};
-    this.atkBonus = m.prop(args.atkBonus);
-    this.damBonus = m.prop(args.damBonus);
-    this.isTwoHanded = function(){return args.isTwoHanded;};
-    this.damageDice = function(){return args.damageDice;};
-    this.type = function(){return args.type;};
-    this.crit = function(){return args.crit;};
-};
-
-model.DexWeapon = function(args){
-    args.atkStat = "dex";
-    return new model.Weapon(args);
-};
+var model = require('./models/Model');
 
 var viewmodel = {
     character: {
@@ -208,7 +56,7 @@ viewmodel.SavingThrow = function(name, label){
     this.label = m.prop(label);
 };
 viewmodel.SavingThrow.prototype.value = function(){
-    return viewmodel.showBonus(model.currentChar() ? model.currentChar().class.saves[this.name()].value() : 0);
+    return viewmodel.showBonus(model.currentChar() ? model.currentChar().class.saves[this.name()].value(model.currentChar()) : 0);
 };
 viewmodel.character.savingThrows = [
     new viewmodel.SavingThrow("fort", "Fort"),
@@ -538,12 +386,25 @@ model.characters = {
                     c.stats.con.value(c.stats.con.value() + 2);
                     c.class.saves.will.bonus(c.class.saves.will.bonus() + 2);
                     c.mods().ac(c.mods().ac() + Math.floor(c.level / 4));
+
+                    c.attacks.push(new model.Weapon({
+                        name: "Claw (lesser beast totem)",
+                        atkBonus: 0,
+                        damBonus: 0,
+                        isTwoHanded: false,
+                        damageDice: "1d6",
+                        type: "B/S",
+                        crit: "20/x2"
+                    }));
                 },
                 end: function(c){
                     c.stats.str.value(c.stats.str.value() - 2);
                     c.stats.con.value(c.stats.con.value() - 2);
                     c.class.saves.will.bonus(c.class.saves.will.bonus() - 2);
                     c.mods().ac(c.mods().ac() - Math.floor(c.level / 4));
+
+                    var i = c.attacks.map(function(w){return w.name;}).indexOf("Claw (lesser beast totem)");
+                    c.attacks.splice(i, 1);
                 }
             }),
             new model.PassiveEffect("Raging Song: Glorious Epic", "1 rnd of raging song, 10 minutes: gain +2 on Diplomacy or Intimidate"),
@@ -702,7 +563,7 @@ model.characters = {
                     "Alter Self",
                     "Bladed Dash",
                     "Heroism",
-                    "Mirror Image"
+                    "Mirror Image - 1d4 + 2 images"
                 ]
             }
         ],
@@ -831,7 +692,10 @@ model.characters = {
     })
 };
 
-m.route(document.getElementById("layout"), "/", {
-    "/:char": m.component(component.Layout, component.Sheet),
-    "/": m.component(component.Layout, component.ChooseCharacter)
-});
+exports.init = function() {
+    console.log('Initialising app');
+    m.route(document.getElementById("layout"), "/", {
+        "/:char": m.component(component.Layout, component.Sheet),
+        "/": m.component(component.Layout, component.ChooseCharacter)
+    });
+};

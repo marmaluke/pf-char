@@ -1,0 +1,22 @@
+{
+  "name": "pf-char",
+  "description": "Some of my characters",
+  "authors": [
+    "Mark Lemmon <mark.s.lemmon@gmail.com>"
+  ],
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/marmaluke/pf-char",
+  "moduleType": [],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "mithril": "~0.2.0",
+    "pure": "~0.6.0"
+  }
+}
