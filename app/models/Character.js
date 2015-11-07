@@ -6,6 +6,18 @@ var Character = function(c){
         self[pname] = c[pname];
     });
 
+    self.effects.forEach(function(ef) {
+        ef.character(self);
+    });
+
+    self.skills.forEach(function(sk) {
+        sk.character(self);
+    });
+
+    Object.getOwnPropertyNames(self.class.saves).forEach(function(save) {
+        self.class.saves[save].character(self);
+    });
+
     this.hp = {
         max: function(){return self.level * ((self.class.hd / 2) + 1 + self.stats.con.bonus() + 1) + ((self.class.hd / 2) - 1);},
         damage: m.prop(0),

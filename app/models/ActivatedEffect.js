@@ -5,13 +5,14 @@ var ActivatedEffect = function(ae){
     this.start = function(){
         if (this.active()) return;
         this.active(true);
-        ae.start(model.currentChar());
+        ae.start(this.character());
     };
     this.end = function(){
         if (!this.active()) return;
         this.active(false);
-        ae.end(model.currentChar());
+        ae.end(this.character());
     };
+    this.character = m.prop();
 };
 
 module.exports = ActivatedEffect;

@@ -41,7 +41,7 @@ var fang = module.exports = new Character({
         acp: -3
     },
     attacks: [
-        new Weapon({
+        new Weapon.Melee({
             name: "Longspear",
             atkBonus: 0,
             damBonus: 0,

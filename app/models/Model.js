@@ -2,7 +2,7 @@
 
 var model = {
     currentChar: m.prop(),
-    characters: {}
+    characters: require('../characters/Characters')
 };
 
 model.DexWeapon = function(args){

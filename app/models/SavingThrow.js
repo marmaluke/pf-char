@@ -4,10 +4,11 @@ var SavingThrow = function(progression, stat){
     this.progression = m.prop(progression);
     this.stat = m.prop(stat);
     this.bonus = m.prop(0);
+    this.character = m.prop();
 };
 
-SavingThrow.prototype.value = function(character){
-    var level = character.level,
+SavingThrow.prototype.value = function(){
+    var level = this.character().level,
         levelBonus;
 
     if (this.progression() == "good") {
@@ -16,21 +17,17 @@ SavingThrow.prototype.value = function(character){
         levelBonus = Math.floor(level / 3);
     }
 
-    return levelBonus + character.stats[this.stat()].bonus() + this.bonus();
+    return levelBonus + this.character().stats[this.stat()].bonus() + this.bonus();
 };
 
-var FortSave = function(progression){
+exports.FortSave = function(progression){
     return new SavingThrow(progression, "con");
 };
 
-var RefSave = function(progression){
+exports.RefSave = function(progression){
     return new SavingThrow(progression, "dex");
 };
 
-var WillSave = function(progression){
+exports.WillSave = function(progression){
     return new SavingThrow(progression, "wis");
 };
-
-exports.FortSave = FortSave;
-exports.RefSave = RefSave;
-exports.WillSave = WillSave;

@@ -39,7 +39,7 @@ var artuk = new Character({
             acp: -1
         },
         attacks: [
-            new Weapon({
+            new Weapon.Melee({
                 name: "Cutlass",
                 atkBonus: 0,
                 damBonus: 0,
@@ -48,7 +48,7 @@ var artuk = new Character({
                 type: "S",
                 crit: "18-20/x2"
             }),
-            new Weapon({
+            new Weapon.Melee({
                 name: "Cutlass (2H)",
                 atkBonus: 0,
                 damBonus: 0,
@@ -57,7 +57,7 @@ var artuk = new Character({
                 type: "S",
                 crit: "18-20/x2"
             }),
-            new Weapon({
+            new Weapon.Melee({
                 name: "Morningstar +1",
                 atkBonus: 1,
                 damBonus: 1,
@@ -66,7 +66,7 @@ var artuk = new Character({
                 type: "B/P",
                 crit: "20/x2"
             }),
-            new Weapon({
+            new Weapon.Melee({
                 name: "Morningstar +1 (2H)",
                 atkBonus: 1,
                 damBonus: 1,
@@ -98,7 +98,7 @@ var artuk = new Character({
                     c.class.saves.will.bonus(c.class.saves.will.bonus() + 2);
                     c.mods().ac(c.mods().ac() + Math.floor(c.level / 4));
 
-                    c.attacks.push(new Weapon({
+                    c.attacks.push(new Weapon.Melee({
                         name: "Claw (lesser beast totem)",
                         atkBonus: 0,
                         damBonus: 0,
@@ -125,10 +125,18 @@ var artuk = new Character({
               start: function(c){
                   c.mods().atk(c.mods().atk() + 2);
                   c.mods().skill(c.mods().skill() + 2);
+                  Object.getOwnPropertyNames(c.class.saves).forEach(function(saveName) {
+                      var save = c.class.saves[saveName];
+                      save.bonus(save.bonus() + 2);
+                  });
               },
               end: function(c){
                   c.mods().atk(c.mods().atk() - 2);
                   c.mods().skill(c.mods().skill() - 2);
+                  Object.getOwnPropertyNames(c.class.saves).forEach(function(saveName) {
+                      var save = c.class.saves[saveName];
+                      save.bonus(save.bonus() - 2);
+                  });
               }
             }),
             new ActivatedEffect({
