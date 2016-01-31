@@ -134,6 +134,9 @@ module.exports = Sheet = {
                         spellLevel.known.map(function(knownSpell){
                             return m(".pure-u-1", knownSpell);
                         }),
+                        spellLevel.memorised ? spellLevel.memorised.map(memSpell => m(".pure-u-1", [
+                            Array.apply(null, Array(memSpell.number)).map(() => m("input[type=checkbox]")),
+                            memSpell.name ])) : "",
                         Separator
                     ];
                 })

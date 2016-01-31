@@ -14,14 +14,14 @@ var artuk = new Character({
     race: "Orc",
     alignment: "Chaotic Evil",
     stats: {
-        str: new Stat(19),
+        str: new Stat(21),
         dex: new Stat(12),
         con: new Stat(14),
         int: new Stat(8),
         wis: new Stat(6),
         cha: new Stat(14)
     },
-    level: 6,
+    level: 8,
     class: {
         name: "Skald",
         hd: 8,
@@ -75,8 +75,12 @@ var artuk = new Character({
     trackedAbilities: [
         {
             name: "Raging Song",
-            perDay: 15
-        }
+            perDay: 19
+        },
+	{
+	    name: "Lore Master",
+	    perDay: 1
+	}
     ],
     effects: [
         new PassiveEffect("Peg Leg", "+1 Fort, +1 damage vs aquatic animals"),
@@ -87,27 +91,26 @@ var artuk = new Character({
         new PassiveEffect("Dayrunner", "-2 ranged atks"),
         new ActivatedEffect({
             name: "Raging Song: Inspired Rage",
-            description: "+2 Str/Con, -1 AC, +2 Will",
+            description: "+4 Str/Con, -1 AC, +3 Will",
             start: function(c){
-                c.stats.str.value(c.stats.str.value() + 2);
-                c.stats.con.value(c.stats.con.value() + 2);
-                c.class.saves.will.bonus(c.class.saves.will.bonus() + 2);
+                c.stats.str.value(c.stats.str.value() + 4);
+                c.stats.con.value(c.stats.con.value() + 4);
+                c.class.saves.will.bonus(c.class.saves.will.bonus() + 3);
                 c.mods().ac(c.mods().ac() + Math.floor(c.level / 4));
 
                 c.attacks.push(new Weapon.Melee({
                     name: "Claw (lesser beast totem)",
                     atkBonus: 0,
                     damBonus: 0,
-                    isTwoHanded: false,
                     damageDice: "1d6",
                     type: "B/S",
                     crit: "20/x2"
                 }));
             },
             end: function(c){
-                c.stats.str.value(c.stats.str.value() - 2);
-                c.stats.con.value(c.stats.con.value() - 2);
-                c.class.saves.will.bonus(c.class.saves.will.bonus() - 2);
+                c.stats.str.value(c.stats.str.value() - 4);
+                c.stats.con.value(c.stats.con.value() - 4);
+                c.class.saves.will.bonus(c.class.saves.will.bonus() - 3);
                 c.mods().ac(c.mods().ac() - Math.floor(c.level / 4));
 
                 var i = c.attacks.map(function(w){return w.name;}).indexOf("Claw (lesser beast totem)");
@@ -133,6 +136,20 @@ var artuk = new Character({
                     var save = c.class.saves[saveName];
                     save.bonus(save.bonus() - 2);
                 });
+            }
+        }),
+        new ActivatedEffect({
+            name: "Haste",
+            description: "Extra attack when full-attacking; +1 to hit, AC and reflex saves; +20 feet mavement",
+            start: c => {
+                c.mods().atk(c.mods().atk() + 1);
+                c.mods().ac(c.mods().ac() + 1);
+                c.class.saves.ref.bonus(c.class.saves.ref.bonus() + 1);
+            },
+            end: c => {
+                c.mods().atk(c.mods().atk() - 1);
+                c.mods().ac(c.mods().ac() - 1);
+                c.class.saves.ref.bonus(c.class.saves.ref.bonus() - 1);
             }
         }),
         new ActivatedEffect({
@@ -183,8 +200,21 @@ var artuk = new Character({
         }),
         new PassiveEffect("Rage Power: Lesser Beast Totem", "Grow claws while raging"),
         new PassiveEffect("Rage Power: Beast Totem", "Natural armor bonus while raging"),
-        new PassiveEffect("Improved Overrun"),
-        new PassiveEffect("Uncanny Dodge")
+        new PassiveEffect("Furious Focus", "No Power Attack penalty on first attack of the round"),
+        new PassiveEffect("Uncanny Dodge", "Cannot be caught flat-footed, don't lose dex bonus to AC vs invisible foes"),
+        new PassiveEffect("Improved Uncanny Dodge", "Cannot be flanked (sneak attack requires rogue level +4)"),
+	new PassiveEffect("Lore Master", "Take 10 on trained Knowledge skills; 1/day,take 20 on a Knowledge check as a standard action"),
+	new ActivatedEffect({
+	    name: "Shield of Swings",
+	    description: "Gain bonus to AC; reduce damage by half",
+	    start: function(c) {
+		c.mods().ac(c.mods().ac() + 4);
+	    },
+	    end: function(c) {
+		c.mods().ac(c.mods().ac() - 4);
+	    }
+	}),
+        new PassiveEffect("Svengli's Eye (magic item)", "+4 to navigate; 1 rnd per day, acts as True Seeing")
     ],
     skills: [
         new Skill({
@@ -207,40 +237,55 @@ var artuk = new Character({
         new Skill({
             name: "Perform (Percussion)",
             stat: "cha",
-            ranks: 6
+            ranks: 8
         }, true, false),
         new Skill({
             name: m.trust("&nbsp;&nbsp;&nbsp;Intimidate"),
             stat: "cha",
-            ranks: 6
+            ranks: 8
         }, true, false),
         new Skill({
             name: m.trust("&nbsp;&nbsp;&nbsp;Handle Animal"),
             stat: "cha",
-            ranks: 6
+            ranks: 8
         }, true, false),
         new Skill({
             name: "Perform (Oratory)",
             stat: "cha",
-            ranks: 6
+            ranks: 8
+        }, true, false),
+	new Skill({
+            name: m.trust("&nbsp;&nbsp;&nbsp;Diplomacy"),
+            stat: "cha",
+            ranks: 8
         }, true, false),
         new Skill({
+            name: m.trust("&nbsp;&nbsp;&nbsp;Sense Motive"),
+            stat: "cha",
+            ranks: 8
+        }, true, false),
+	new Skill({
+            name: "Perform (Sing)",
+            stat: "cha",
+            ranks: 2
+        }, true, false),
+	new Skill({
             name: "Profession (Sailor)",
             stat: "wis",
             ranks: 1,
-            bonus: function(){ return Math.floor(artuk.level / 2); }
+            bonus: () => Math.floor(artuk.level / 2)
         }, true, false),
         new Skill({
             name: "Survival",
             stat: "wis",
             ranks: 0,
-            conditional: function(){ return "+" + Math.floor(artuk.level / 2)  +  " at sea"; }
+            conditional: () => "+" + Math.floor(artuk.level / 2)  +  " at sea"
         }, false, false),
         new Skill({
             name: "Swim",
             stat: "str",
             ranks: 1,
-            bonus: function(){ return Math.floor(artuk.level / 2); }
+            bonus: () => Math.floor(artuk.level / 2)
         }, true, true),
         new Skill({
             name: "Spellcraft",
@@ -266,6 +311,7 @@ var artuk = new Character({
             perDay: 5,
             known: [
                 "Cure Light Wounds",
+		"Feather Fall",
                 "Feather Step",
                 "Identify",
                 "Timely Inspiration"
@@ -273,19 +319,33 @@ var artuk = new Character({
         },
         {
             level: 2,
-            perDay: 4,
+            perDay: 5,
             known: [
                 "Alter Self",
                 "Bladed Dash",
                 "Heroism",
                 "Mirror Image - 1d4 + 2 images"
             ]
+        },
+        {
+            level: 3,
+            perDay: 2,
+            known: [
+                "Haste",
+		"See Invisibility",
+                "Cure Serious Wounds"
+            ]
         }
     ],
-    cash: 1945,
+    cash: 3992,
     gear: [
-	"Svengli's eye: +4 to navigate; 1 rnd per day, acts as True Seeing"
-    ]
+	"Svengli's eye: +4 to navigate; 1 rnd per day, acts as True Seeing",
+        "Potion of resist energy",
+        "Wand of CLW",
+        "Belt of Giant Strength +2"
+
+    ],
+    feats: ["Arcane Strike", "Power Attack", "Shield of Swings", "Furious Focus", "*Dreadful Carnage (lvl 11)"]
 })
 
 module.exports = artuk;
