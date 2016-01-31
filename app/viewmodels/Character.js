@@ -11,7 +11,7 @@ var character = {
     ac: function(){return model.currentChar() ? model.currentChar().ac() : "10";},
     touchAc: function(){return model.currentChar() ? model.currentChar().touchAc() : "10";},
     bab: function(){return model.currentChar() ? model.currentChar().bab() : "0";},
-    cmb: function(){return "+" + (model.currentChar() ? model.currentChar().cmb() : "0");},
+    cmb: function(){return model.currentChar() ? model.currentChar().cmb() : 0;},
     cmd: function(){return model.currentChar() ? model.currentChar().cmd() : "10";},
     currentHP: function(){return model.currentChar() ? model.currentChar().hp.max() - model.currentChar().hp.damage() : "0";},
     maxHP: function(){return model.currentChar() ? model.currentChar().hp.max() : "0";},
