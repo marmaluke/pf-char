@@ -21,7 +21,7 @@ var artuk = new Character({
         wis: new Stat(6),
         cha: new Stat(14)
     },
-    level: 6,
+    level: 7,
     class: {
         name: "Skald",
         hd: 8,
@@ -75,8 +75,12 @@ var artuk = new Character({
     trackedAbilities: [
         {
             name: "Raging Song",
-            perDay: 15
-        }
+            perDay: 17
+        },
+	{
+	    name: "Lore Master",
+	    perDay: 1
+	}
     ],
     effects: [
         new PassiveEffect("Peg Leg", "+1 Fort, +1 damage vs aquatic animals"),
@@ -183,8 +187,20 @@ var artuk = new Character({
         }),
         new PassiveEffect("Rage Power: Lesser Beast Totem", "Grow claws while raging"),
         new PassiveEffect("Rage Power: Beast Totem", "Natural armor bonus while raging"),
-        new PassiveEffect("Improved Overrun"),
-        new PassiveEffect("Uncanny Dodge")
+        new PassiveEffect("Furious Focus", "No Power Attack penalty on first attack of the round"),
+        new PassiveEffect("Uncanny Dodge"),
+	new PassiveEffect("Lore Master", "Take 10 on trained Knowledge skills; 1/day,take 20 on a Knowledge check as a standard action"),
+	new ActivatedEffect({
+	    name: "Shield of Swings",
+	    description: "Gain bonus to AC; reduce damage by half",
+	    start: function(c) {
+		c.mods().ac(c.mods().ac() + 4);
+	    },
+	    end: function(c) {
+		c.mods().ac(c.mods().ac() - 4);
+	    }
+	}),
+        new PassiveEffect("Svengli's Eye (magic item)", "+4 to navigate; 1 rnd per day, acts as True Seeing")
     ],
     skills: [
         new Skill({
@@ -207,24 +223,39 @@ var artuk = new Character({
         new Skill({
             name: "Perform (Percussion)",
             stat: "cha",
-            ranks: 6
+            ranks: 7
         }, true, false),
         new Skill({
             name: m.trust("&nbsp;&nbsp;&nbsp;Intimidate"),
             stat: "cha",
-            ranks: 6
+            ranks: 7
         }, true, false),
         new Skill({
             name: m.trust("&nbsp;&nbsp;&nbsp;Handle Animal"),
             stat: "cha",
-            ranks: 6
+            ranks: 7
         }, true, false),
         new Skill({
             name: "Perform (Oratory)",
             stat: "cha",
-            ranks: 6
+            ranks: 7
+        }, true, false),
+	new Skill({
+            name: m.trust("&nbsp;&nbsp;&nbsp;Diplomacy"),
+            stat: "cha",
+            ranks: 7
         }, true, false),
         new Skill({
+            name: m.trust("&nbsp;&nbsp;&nbsp;Sense Motive"),
+            stat: "cha",
+            ranks: 7
+        }, true, false),
+	new Skill({
+            name: "Perform (Sing)",
+            stat: "cha",
+            ranks: 1
+        }, true, false),
+	new Skill({
             name: "Profession (Sailor)",
             stat: "wis",
             ranks: 1,
@@ -266,6 +297,7 @@ var artuk = new Character({
             perDay: 5,
             known: [
                 "Cure Light Wounds",
+		"Feather Fall",
                 "Feather Step",
                 "Identify",
                 "Timely Inspiration"
@@ -280,12 +312,21 @@ var artuk = new Character({
                 "Heroism",
                 "Mirror Image - 1d4 + 2 images"
             ]
+        },
+        {
+            level: 3,
+            perDay: 1,
+            known: [
+                "Haste",
+		"See Invisibility"
+            ]
         }
     ],
     cash: 1945,
     gear: [
 	"Svengli's eye: +4 to navigate; 1 rnd per day, acts as True Seeing"
-    ]
+    ],
+    feats: ["Arcane Strike", "Power Attack", "Shield of Swings", "Furious Focus", "*Dreadful Carnage (lvl 11)"]
 })
 
 module.exports = artuk;
