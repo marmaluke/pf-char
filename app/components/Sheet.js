@@ -48,7 +48,7 @@ module.exports = Sheet = {
                         ];
                     }),
                     m(".pure-u-1"),
-                    m(".pure-u-1-3", m("label", "CMB")), m(".pure-u-1-3", m("span", utils.showBonus(character.cmb()))), m(".pure-u-1-3"),
+                    m(".pure-u-1-3", m("label", "CMB")), m(".pure-u-1-3", m("span", character.cmb())), m(".pure-u-1-3"),
                     m(".pure-u-1-3", m("label", "CMD")), m(".pure-u-1-3", m("span", character.cmd())), m(".pure-u-1-3")
                 ]),
                 m(".pure-u-1-3", [
