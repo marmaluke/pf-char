@@ -14,7 +14,7 @@ var artuk = new Character({
     race: "Orc",
     alignment: "Chaotic Evil",
     stats: {
-        str: new Stat(21),
+        str: new Stat(22),
         dex: new Stat(12),
         con: new Stat(14),
         int: new Stat(8),
@@ -61,7 +61,7 @@ var artuk = new Character({
             damBonus: 1,
             damageDice: "1d8",
             type: "B/P",
-            crit: "20/x2"
+            crit: "x2"
         }),
         new Weapon.Melee2H({
             name: "Morningstar +1 (2H)",
@@ -69,7 +69,23 @@ var artuk = new Character({
             damBonus: 1,
             damageDice: "1d8",
             type: "B/P",
-            crit: "20/x2"
+            crit: "x2"
+        }),
+        new Weapon.Melee({
+            name: "Trident of Zul +1, human bane",
+            atkBonus: 1,
+            damBonus: 1,
+            damageDice: "1d8",
+            type: "P",
+            crit: "x2"
+        }),
+        new Weapon.Melee2H({
+            name: "Trident of Zul +1, human bane (2H)",
+            atkBonus: 1,
+            damBonus: 1,
+            damageDice: "1d8",
+            type: "P",
+            crit: "x2"
         })
     ],
     trackedAbilities: [
@@ -80,7 +96,11 @@ var artuk = new Character({
 	{
 	    name: "Lore Master",
 	    perDay: 1
-	}
+	},
+        {
+            name: "Spell Kenning",
+            perDay: 1
+        }
     ],
     effects: [
         new PassiveEffect("Peg Leg", "+1 Fort, +1 damage vs aquatic animals"),
@@ -113,7 +133,7 @@ var artuk = new Character({
                 c.class.saves.will.bonus(c.class.saves.will.bonus() - 3);
                 c.mods().ac(c.mods().ac() - Math.floor(c.level / 4));
 
-                var i = c.attacks.map(function(w){return w.name;}).indexOf("Claw (lesser beast totem)");
+                var i = c.attacks.map(w => w.name).indexOf("Claw (lesser beast totem)");
                 c.attacks.splice(i, 1);
             }
         }),
@@ -214,20 +234,34 @@ var artuk = new Character({
 		c.mods().ac(c.mods().ac() - 4);
 	    }
 	}),
-        new PassiveEffect("Svengli's Eye (magic item)", "+4 to navigate; 1 rnd per day, acts as True Seeing")
+        new PassiveEffect("Svengli's Eye (magic item)", "+4 to navigate; 1 rnd per day, acts as True Seeing"),
+        new ActivatedEffect({
+            name: "Cloak of Resistance",
+            description: "+1",
+            start: c => {
+                c.class.saves.fort.bonus(c.class.saves.fort.bonus() + 1);
+                c.class.saves.ref.bonus(c.class.saves.ref.bonus() + 1);
+                c.class.saves.will.bonus(c.class.saves.will.bonus() + 1);
+            },
+            end: c => {
+                c.class.saves.fort.bonus(c.class.saves.fort.bonus() - 1);
+                c.class.saves.ref.bonus(c.class.saves.ref.bonus() - 1);
+                c.class.saves.will.bonus(c.class.saves.will.bonus() - 1);
+            }
+        })
     ],
     skills: [
         new Skill({
             name: "Acrobatics",
             stat: "dex",
             ranks: 1,
-            conditional: function(){ return "+" + Math.floor(artuk.level / 2)  +  " while aboard a boat"; }
+            conditional: () => "+" + Math.floor(artuk.level / 2)  +  " while aboard a boat"
         }, true, true),
         new Skill({
             name: "Climb",
             stat: "str",
             ranks: 1,
-            conditional: function(){ return "+" + Math.floor(artuk.level / 2)  +  " while aboard a boat"; }
+            conditional: () => "+" + Math.floor(artuk.level / 2)  +  " while aboard a boat"
         }, true, true),
         new Skill({
             name: "Knowledge (local)",
@@ -337,13 +371,13 @@ var artuk = new Character({
             ]
         }
     ],
-    cash: 3992,
+    cash: 6992,
     gear: [
 	"Svengli's eye: +4 to navigate; 1 rnd per day, acts as True Seeing",
         "Potion of resist energy",
-        "Wand of CLW",
-        "Belt of Giant Strength +2"
-
+        "Wand of CLW (charges: 50)",
+        "Belt of Giant Strength +2",
+        "Cloak of Resistance +1"
     ],
     feats: ["Arcane Strike", "Power Attack", "Shield of Swings", "Furious Focus", "*Dreadful Carnage (lvl 11)"]
 })

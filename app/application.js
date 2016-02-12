@@ -10,7 +10,7 @@ var Layout = require('./components/Layout'),
 exports.init = function() {
     console.log('Initialising app');
     m.route(document.getElementById("layout"), "/", {
-        "/:char": m.component(Layout, Sheet),
+        "/:char": m.component(Layout, CharacterSheet),
         "/": m.component(Layout, ChooseCharacter)
     });
 };

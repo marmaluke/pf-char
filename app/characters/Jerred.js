@@ -23,7 +23,7 @@ var jerred = module.exports = new Character({
         wis: new Stat(19),
         cha: new Stat(16)
     },
-    level: 7,
+    level: 8,
     class: {
         name: "Shaman",
         hd: 8,
@@ -83,7 +83,9 @@ var jerred = module.exports = new Character({
         new PassiveEffect("Wandering Spirit", "Life"),
         new PassiveEffect("Lure of the Heavens (Su, hex)", "don't leave tracks; can hover 6 inches above ground or liquid surfaces"),
         new PassiveEffect("Channel", "Heal 3d6"),
-        new PassiveEffect("Heaven's Leap (Su, hex)", "as jester's jaunt")
+        new PassiveEffect("Heaven's Leap (Su, hex)", "as jester's jaunt"),
+        new PassiveEffect("Shapeshift (Su, hex)"),
+        new PassiveEffect("Void Adaptation (Su)")
     ],
     skills: [
         new Skill({
@@ -156,7 +158,7 @@ var jerred = module.exports = new Character({
             perDay: 1,
             known: [ "Daylight", "Neutralize Poison" ],
             memorised: [
-                { name: "Stinking Cloud", number: 1 },
+                { name: "Stinking Cloud", number: 2 },
                 { name: "Summon Nature's Ally III", number: 2 }
             ]
         },
@@ -165,7 +167,7 @@ var jerred = module.exports = new Character({
             perDay: 1,
             known: [ "Rainbow Pattern", "Restoration" ],
             memorised: [
-                { name: "Summon Nature's Ally IV", number: 1 },
+                { name: "Summon Nature's Ally IV", number: 2 },
                 { name: "Fear", number: 1 }
             ]
         }
