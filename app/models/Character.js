@@ -19,7 +19,7 @@ var Character = function(c){
     });
 
     this.hp = {
-        max: function(){return self.level * ((self.class.hd / 2) + 1 + self.stats.con.bonus() + 1) + ((self.class.hd / 2) - 1);},
+        max: () => self.level * ((self.class.hd / 2) + 1 + self.stats.con.bonus() + 1) + ((self.class.hd / 2) - 1),
         damage: m.prop(0),
         temp: m.prop(0)
     };

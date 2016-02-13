@@ -1,3 +1,5 @@
+'use strict';
+
 var Character = require('../viewmodels/Character'),
     Weapon = require('../viewmodels/Weapon'),
     model = require('../models/Model'),
@@ -8,17 +10,52 @@ var Character = require('../viewmodels/Character'),
 var Separator = require('./Separator'),
     Checkbox = require('./checkbox');
 
-module.exports = Sheet = {
+var Sheet = {
     controller: function(){
-        model.currentChar(model.characters[m.route.param("char")]);
+        let charName = m.route.param('char');
+        model.currentChar(model.characters[charName]);
+        let character = new Character(model.currentChar());
         return {
-            character: new Character(),
+            character,
             changeHp: function(hpChangeFn) {
                 return function(e){
                     e.preventDefault();
                     if (typeof +viewState.hp.change() === 'number') hpChangeFn(+viewState.hp.change());
                     viewState.hp.change(null);
                 };
+            },
+            saveState: function () {
+                let currentState = {
+                    damage: model.currentChar().hp.damage(),
+                    tempHP: model.currentChar().hp.temp(),
+                    armorEquipped: model.currentChar().isArmorEquipped(),
+                    trackedAbilities: character.trackedAbilities.map(ability => ability.uses.map(use => use())),
+                    activeEffects: model.currentChar().effects
+                        .filter(eff => eff instanceof ActivatedEffect)
+                        .map(eff => eff.active()),
+                    spells: character.spells.map(spellLevel => ({
+                        uses: spellLevel.uses.map(use => use()),
+                        memorised: spellLevel.memorised.map(spell => spell.uses.map(use => use()))
+                    }))
+                };
+                localStorage.setItem(charName, JSON.stringify(currentState));
+            },
+            loadState: function() {
+                let storedState = JSON.parse(localStorage.getItem(charName));
+                console.log(storedState);
+                model.currentChar().hp.damage(storedState.damage);
+                model.currentChar().hp.temp(storedState.tempHP);
+                model.currentChar().isArmorEquipped(storedState.armorEquipped);
+                storedState.trackedAbilities.forEach((ability, i) => ability.forEach((use, j) => character.trackedAbilities[i].uses[j](use)));
+                model.currentChar().effects
+                    .filter(eff => eff instanceof ActivatedEffect)
+                    .filter((eff, i) => storedState.activeEffects[i])
+                    .forEach(eff => eff.start(model.currentChar()));
+                storedState.spells.forEach((spellLevel, i) => {
+                    spellLevel.uses.forEach((use, j) => character.spells[i].uses[j](use));
+                    spellLevel.memorised.forEach((spell, j) => spell.forEach((use, k) => character.spells[i].memorised[j].uses[k](use)));
+                });
+                m.redraw();
             }
         };
     },
@@ -30,7 +67,9 @@ module.exports = Sheet = {
                 m(".pure-u-1-6", m("span", ctrl.character.race())),
                 m(".pure-u-1-6", m("span", ctrl.character.className())),
                 m(".pure-u-1-6", m("span", ctrl.character.level())),
-                m(".pure-u-1-3", m("span", ctrl.character.alignment())),
+                m(".pure-u-1-6", m("span", ctrl.character.alignment())),
+                m(".pure-u-1-12", m('button', {onclick: ctrl.saveState}, 'Save')),
+                m(".pure-u-1-12", m('button', {onclick: ctrl.loadState}, 'Load')),
                 Separator,
                 m(".pure-u-1-3",
                   ctrl.character.stats.map(s => [
@@ -117,16 +156,18 @@ module.exports = Sheet = {
                     ];
                 }),
                 Separator,
-                model.currentChar().spells.map(spellLevel =>  [
-                        m(".pure-u-1-2", m.trust("Level " + spellLevel.level + " spells - " + spellLevel.perDay + " per day")),
-                        m(".pure-u-1-2", typeof spellLevel.perDay !== "number" ? "" : Array.apply(null, Array(spellLevel.perDay)).map(() => m("input[type=checkbox]"))),
+                ctrl.character.spells.map(spellLevel => [
+                        m(".pure-u-1-2", `Level ${spellLevel.level} spells - ${spellLevel.perDay} per day`),
+                    m(".pure-u-1-2", spellLevel.uses.map(use => m.component(Checkbox, use))),
                         Separator,
                         spellLevel.known.map(knownSpell => m(".pure-u-1", knownSpell)),
                         spellLevel.memorised ? spellLevel.memorised.map(memSpell => m(".pure-u-1", [
-                            Array.apply(null, Array(memSpell.number)).map(() => m("input[type=checkbox]")),
+                            memSpell.uses.map(use => m.component(Checkbox, use)),
                             memSpell.name ])) : "",
                         Separator
                     ])
             ])]);
     }
 };
+
+module.exports = Sheet;
